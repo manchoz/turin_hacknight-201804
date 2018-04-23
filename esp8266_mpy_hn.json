@@ -1,0 +1,35 @@
+{
+  "device": "thn4-mp",
+  "meta": {
+    "name": "thn4-mp",
+    "description": "MicroPython ESP8266 for HackNight"
+  },
+  "frame": {
+    "bigendian": true,
+    "bitfields": false
+  },
+  "sensors": [
+    {
+      "meta": {
+        "name": "temperature"
+      },
+      "fmt": {
+        "index": 0,
+        "fmtchr": "H"
+      },
+      "sensortypeid": "2e9e5330-5bde-4f5b-9c1f-52c96d73a05e",
+      "conversionid": "5b635746-c7aa-4604-8f8d-0066fe84a5a2"
+    },
+    {
+      "meta": {
+        "name": "humidity"
+      },
+      "fmt": {
+        "index": 1,
+        "fmtchr": "H"
+      },
+      "sensortypeid": "6d2504fd-6a10-4295-aa9c-0b4d615941e2",
+      "conversionid": "5b635746-c7aa-4604-8f8d-0066fe84a5a2"
+    }
+  ]
+}
