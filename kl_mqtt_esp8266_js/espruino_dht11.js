@@ -1,46 +1,30 @@
 var dht;
-var wifi;
 var mqtt;
-
+var wifi;
 var payload;
 
-const dhtPin = NodeMCU.D3;
+var wifiSSID = "toolbox";
+var wifiPasswd = "Toolbox.Torino";
+var mqttBroker = "192.168.2.112";
 
-const wifiSSID = "toolbox";
-const wifiPasswd = "Toolbox.Torino";
+// Use toBase64 conversion when sending to 'lorawan' targets
+// var mqttTopic = "/lorawan/hacknight/devices/tmmf-espr01/up";
 
-const mqttBroker = "10.100.15.54";
-const deviceID = "tmmf-espr01";
-const mqttTopic = `/lorawan/hacknight/devices/${deviceID}/up`;
+// Use toHex conversion when sending to 'sigfox' targets
+var mqttTopic = "/sigfox/hacknight/devices/tmmf-espr01/up";
+
+var dhtPin = NodeMCU.D2;
 
 function onInit() {
-  wifi = require("Wifi");
-  mqtt = require("MQTT").create(mqttBroker);
   dht = require("DHT11").connect(dhtPin);
 
-  readDHT();
+  wifi = require("Wifi");
 
+  mqtt = require("MQTT").create(mqttBroker);
   mqtt.on("connected", function() {
     console.log("Connected to " + mqttBroker);
   });
 
-  mqtt.on('disconnected', function() {
-    console.log("MQTT disconnected... reconnecting.");
-    setTimeout(function() {
-      mqtt.connect();
-    }, 1000);
-  });
-
-  wifi.on('disconnected', function(details) {
-    connectWiFi();
-  });
-  connectWiFi();
-
-  payload = new DataView(new ArrayBuffer(4));
-  setInterval(sendData, 10 * 1000);
-}
-
-function connectWiFi() {
   wifi.connect(
     wifiSSID,
     {password: wifiPasswd},
@@ -49,14 +33,22 @@ function connectWiFi() {
       mqtt.connect();
     }
   );
+  payload = new DataView(new ArrayBuffer(4));
+  readDHT();
+  setInterval(sendData, 10000);
 }
 
 function readDHT() {
   dht.read(function (a) {
-    console.log("Temp: " + a.temp + " RH: " + a.rh);
     payload.setInt16(0, a.temp * 100);
     payload.setUint16(2, a.rh * 100);
   });
+}
+
+function toHex(p) {
+    return Uint8Array(p.buffer).reduce(
+      (output, elem) =>
+      (output + ('0' + elem.toString(16)).slice(-2)), '');
 }
 
 function toBase64(p) {
@@ -64,12 +56,15 @@ function toBase64(p) {
 }
 
 function sendData() {
-  var b64Payload = toBase64(payload);
-  var mqttMsg = JSON.stringify({
-      payload_raw: b64Payload
+  // let asciiPayload = toBase64(payload);
+  let asciiPayload = toHex(payload);
+  let mqttMsg = JSON.stringify({
+      payload_raw: asciiPayload
   });
 
   console.log(mqttMsg);
   mqtt.publish(mqttTopic, mqttMsg);
   readDHT();
 }
+
+//onInit();
