@@ -10,15 +10,9 @@
 
 #include <base64.h>
 
-//const char* ssid = "toolbox";
-//const char* password = "Toolbox.Torino";
-//const char* mqtt_server = "ballad.local";
-
-const char* ssid = "Endymion";
-const char* password = "Caterina01";
-const char* mqtt_server = "192.168.2.112";
-
-
+const char* ssid = "toolbox";
+const char* password = "Toolbox.Torino";
+const char* mqtt_server = "ballad.local";
 
 const char* client_name = "thn4-ardu";
 const char* topic = "/lorawan/hacknight/devices/thn4-ardu/up";
