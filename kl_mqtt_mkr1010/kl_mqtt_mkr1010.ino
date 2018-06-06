@@ -2,17 +2,21 @@
 #include <DHT.h>
 #include <DHT_U.h>
 
-#define DHTPIN 4
+#define DHTPIN 7
 #define DHTTYPE DHT11
 
 #include <WiFi1010.h>
-#include <PubSubClient.h>
-char ssid[] = "toolbox";
-char password[] = "Toolbox.Torino";
+int status = WL_IDLE_STATUS;
 
-const char* mqtt_server = "10.100.15.54";
-const char* client_name = "thn4-mkr";
-const char* topic = "/sigfox/hacknight/devices/thn4-mkr/up";
+#include <PubSubClient.h>
+
+char ssid[] = "toolbox";
+char pass[] = "Toolbox.Torino";
+
+const char mqtt_server[] = "10.100.15.54";
+const int mqtt_port = 1883;
+const char client_name[] = "thn4-mkr1010";
+const char topic[] = "/sigfox/hacknight/devices/thn4-mkr1010/up";
 
 DHT_Unified dht(DHTPIN, DHTTYPE);
 WiFiClient net;
@@ -31,8 +35,9 @@ char *klPayloadBuf = (char *)&klPayload;
 
 void setup() {
   Serial.begin(115200);
+  //  while (!Serial) {}
   setup_wifi();
-  client.setServer(mqtt_server, 1883);
+  client.setServer(mqtt_server, mqtt_port);
   dht.begin();
 }
 
@@ -40,15 +45,26 @@ void setup_wifi() {
 
   delay(10);
   // We start by connecting to a WiFi network
-  Serial.println();
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
+  if (WiFi.status() == WL_NO_SHIELD) {
+    Serial.println("WiFi shield not present");
+    // don't continue:
+    while (true);
+  }
 
-  WiFi.begin(ssid, password);
+  String fv = WiFi.firmwareVersion();
+  if (fv != "1.1.0") {
+    Serial.println("Please upgrade the firmware");
+  }
 
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
+  // attempt to connect to Wifi network:
+  while (status != WL_CONNECTED) {
+    Serial.print("Attempting to connect to SSID: ");
+    Serial.println(ssid);
+    // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
+    status = WiFi.begin(ssid, pass);
+
+    // wait 10 seconds for connection:
+    delay(10000);
   }
 
   Serial.println("");
@@ -60,7 +76,7 @@ void setup_wifi() {
 void reconnect() {
   // Loop until we're reconnected
   while (!client.connected()) {
-     setup_wifi();
+    setup_wifi();
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
     if (client.connect(client_name)) {
